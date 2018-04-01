@@ -1,0 +1,95 @@
+#
+# Finds $name and populates variables and imported targets
+# 
+# Hints:
+#   ${name}_ROOT
+#   ${name}_INCLUDEDIR
+#   ${name}_LIBRARYDIR
+#   ${name}_NO_SYSTEM_PATHS
+#
+# Variables:
+#   ${name}_FOUND
+#   ${name}_INCLUDE_DIR
+#   ${name}_LIBRARY
+# 
+# Targets:
+#   ${target}
+#
+
+set(INCLUDE_SEARCH_PATHS)
+set(LIBRARY_SEARCH_PATHS)
+
+if(${name}_ROOT)
+    list(APPEND INCLUDE_SEARCH_PATHS $${${name}_ROOT}/include)
+    list(APPEND LIBRARY_SEARCH_PATHS $${${name}_ROOT}/lib)
+endif()
+
+if(${name}_INCLUDEDIR)
+    list(APPEND INCLUDE_SEARCH_PATHS $${${name}_INCLUDEDIR})
+endif()
+
+if(${name}_LIBRARYDIR)
+    list(APPEND LIBRARY_SEARCH_PATHS $${${name}_LIBRARYDIR})
+endif()
+
+if(${package})
+    find_package(PkgConfig)
+    pkg_check_modules(PC_${name} QUIET ${package})
+
+    list(APPEND INCLUDE_SEARCH_PATHS $${PC_${name}_INCLUDE_DIRS})
+    list(APPEND LIBRARY_SEARCH_PATHS $${PC_${name}_LIBRARY_DIRS})
+    set(${name}_VERSION $${PC_${name}_VERSION})
+endif()
+
+
+if(${name}_NO_SYSTEM_PATHS)
+    find_path(${name}_INCLUDE_DIR
+        NAMES ${include}
+        PATHS 
+            $${INCLUDE_SEARCH_PATHS}
+            $${CMAKE_INCLUDE_PATH}
+            $${CMAKE_SYSTEM_INCLUDE_PATH}
+            $${CMAKE_INSTALL_PREFIX}/include
+        NO_DEFAULT_PATH)
+
+    find_library(${name}_LIBRARY
+        NAMES ${lib}
+        PATHS
+            $${LIBRARY_SEARCH_PATHS}
+            $${CMAKE_LIBRARY_PATH}
+            $${CMAKE_SYSTEM_LIBRARY_PATH}
+            $${CMAKE_INSTALL_PREFIX}/lib
+        NO_DEFAULT_PATH)
+else()
+    find_path(${name}_INCLUDE_DIR
+        NAMES ${include}
+        PATHS $${INCLUDE_SEARCH_PATHS})
+    find_library(${name}_LIBRARY
+        NAMES ${lib}
+        PATHS $${LIBRARY_SEARCH_PATHS})
+endif()
+
+mark_as_advanced(
+    ${name}_INCLUDE_DIR
+    ${name}_LIBRARY)
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(${name}
+    FOUND_VAR ${name}_FOUND
+    REQUIRED_VARS
+        ${name}_LIBRARY
+        ${name}_INCLUDE_DIR
+    VERSION_VAR ${name}_VERSION)
+
+if(${name}_FOUND)
+    set(${name}_LIBRARIES $${${name}_LIBRARY})
+    set(${name}_INCLUDE_DIRS $${${name}_INCLUDE_DIR})
+
+    if(NOT TARGET ${target})
+        add_library(${target} UNKNOWN IMPORTED)
+        set_target_properties(${target} PROPERTIES
+            IMPORTED_LOCATION $${${name}_LIBRARY}
+            INTERFACE_INCLUDE_DIRECTORIES $${${name}_INCLUDE_DIR})
+    endif()
+endif()
+
