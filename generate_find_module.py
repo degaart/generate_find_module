@@ -17,7 +17,9 @@ def generate(f, template_str, args):
     d["include"] = args.include
     d["lib"] = args.lib
     d["target"] = args.target
-    d["package"] = args.package if args.package else "NO"
+
+    if args.package:
+        d["package"] = args.package
 
     result = template.substitute(d)
 
@@ -37,7 +39,11 @@ if __name__ == "__main__":
     if(not args.target):
         args.target = "{}::{}".format(args.name, args.name)
 
-    template_file = os.path.join(os.path.dirname(__file__), "generate_find_module.template")
+    if args.package:
+        template_file = os.path.join(os.path.dirname(__file__), "generate_find_module.template")
+    else:
+        template_file = os.path.join(os.path.dirname(__file__), "generate_find_module2.template")
+
     template_str = None
     with open(template_file, "rt") as f:
         template_str = f.read()

@@ -32,14 +32,6 @@ if(${name}_LIBRARYDIR)
     list(APPEND LIBRARY_SEARCH_PATHS $${${name}_LIBRARYDIR})
 endif()
 
-find_package(PkgConfig)
-pkg_check_modules(PC_${name} QUIET ${package})
-
-list(APPEND INCLUDE_SEARCH_PATHS $${PC_${name}_INCLUDE_DIRS})
-list(APPEND LIBRARY_SEARCH_PATHS $${PC_${name}_LIBRARY_DIRS})
-set(${name}_VERSION $${PC_${name}_VERSION})
-
-
 if(${name}_NO_SYSTEM_PATHS)
     find_path(${name}_INCLUDE_DIR
         NAMES ${include}
@@ -76,8 +68,7 @@ find_package_handle_standard_args(${name}
     FOUND_VAR ${name}_FOUND
     REQUIRED_VARS
         ${name}_LIBRARY
-        ${name}_INCLUDE_DIR
-    VERSION_VAR ${name}_VERSION)
+        ${name}_INCLUDE_DIR)
 
 if(${name}_FOUND)
     set(${name}_LIBRARIES $${${name}_LIBRARY})
